@@ -4,10 +4,11 @@
     "description": "Bot de organización para scan",
     "main": "index.js",
     "scripts": {
-      "start": "node index.js"
+        "start": "node index.js"
     },
     "dependencies": {
-      "discord.js": "^14.15.3",
-      "dotenv": "^16.4.5"
+        "discord.js": "^14.15.3",
+        "dotenv": "^16.4.5",
+        "express": "^5.2.1"
     }
-  }
+}

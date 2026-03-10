@@ -3,7 +3,22 @@ require("dotenv").config()
 const fs = require("fs")
 const path = require("path")
 
+const express = require("express")
+const app = express()
+
 const { Client, Collection, GatewayIntentBits } = require("discord.js")
+
+// ===== SERVIDOR PARA RENDER =====
+app.get("/", (req, res) => {
+res.send("Bot activo")
+})
+
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT, () => {
+console.log(`🌐 Servidor web activo en puerto ${PORT}`)
+})
+// ================================
 
 const client = new Client({
 intents: [
