@@ -1,8 +1,9 @@
-const { 
-    SlashCommandBuilder, 
-    ActionRowBuilder, 
-    ButtonBuilder, 
-    ButtonStyle 
+const {
+    SlashCommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ChannelType
   } = require("discord.js");
   
   module.exports = {
@@ -14,6 +15,7 @@ const {
         option
           .setName("canal")
           .setDescription("Canal donde se publicará el proyecto")
+          .addChannelTypes(ChannelType.GuildText) // SOLO canales de texto
           .setRequired(true)
       )
   
@@ -45,23 +47,23 @@ const {
       const editor = interaction.options.getNumber("precio_edicion");
       const limpieza = interaction.options.getNumber("precio_limpieza");
   
-      const botones = new ActionRowBuilder()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId("traductor")
-            .setLabel("🌐 Traductor")
-            .setStyle(ButtonStyle.Primary),
+      const botones = new ActionRowBuilder().addComponents(
   
-          new ButtonBuilder()
-            .setCustomId("editor")
-            .setLabel("✏️ Editor")
-            .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId("traductor")
+          .setLabel("🌐 Traductor")
+          .setStyle(ButtonStyle.Primary),
   
-          new ButtonBuilder()
-            .setCustomId("limpieza")
-            .setLabel("🧹 Limpieza")
-            .setStyle(ButtonStyle.Secondary)
-        );
+        new ButtonBuilder()
+          .setCustomId("editor")
+          .setLabel("✏️ Editor")
+          .setStyle(ButtonStyle.Success),
+  
+        new ButtonBuilder()
+          .setCustomId("limpieza")
+          .setLabel("🧹 Limpieza")
+          .setStyle(ButtonStyle.Secondary)
+      );
   
       await canal.send({
         content:
