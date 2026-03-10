@@ -1,43 +1,32 @@
 const { SlashCommandBuilder } = require("discord.js");
-const fs = require("fs");
 
 module.exports = {
- data: new SlashCommandBuilder()
-  .setName("register")
-  .setDescription("Registrar método de pago")
-  .addStringOption(option =>
-   option.setName("metodo")
-    .setDescription("Método de pago")
-    .setRequired(true)
-  )
-  .addStringOption(option =>
-   option.setName("wallet")
-    .setDescription("ID o wallet")
-    .setRequired(true)
-  ),
+  data: new SlashCommandBuilder()
+    .setName("registro")
+    .setDescription("Registrar tu información de pago")
 
- async execute(interaction) {
+    .addStringOption(option =>
+      option
+        .setName("correo")
+        .setDescription("Tu correo electrónico")
+        .setRequired(true)
+    )
 
-  const metodo = interaction.options.getString("metodo");
-  const wallet = interaction.options.getString("wallet");
-  const userId = interaction.user.id;
+    .addStringOption(option =>
+      option
+        .setName("binance_id")
+        .setDescription("Tu ID o correo de Binance")
+        .setRequired(true)
+    ),
 
-  const data = JSON.parse(fs.readFileSync("./database/usuarios.json"));
+  async execute(interaction) {
 
-  data[userId] = {
-   metodo_pago: metodo,
-   wallet: wallet,
-   editing: 0,
-   translation: 0,
-   proofreading: 0,
-   bonus: 0,
-   deductions: 0,
-   chapters: 0
-  };
+    const correo = interaction.options.getString("correo");
+    const binance = interaction.options.getString("binance_id");
 
-  fs.writeFileSync("./database/usuarios.json", JSON.stringify(data, null, 2));
+    await interaction.reply(
+      `✅ Registro completado\n📧 Correo: ${correo}\n💰 Binance: ${binance}`
+    );
 
-  await interaction.reply("✅ Usuario registrado correctamente");
-
- }
+  },
 };
