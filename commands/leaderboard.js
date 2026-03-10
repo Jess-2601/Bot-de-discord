@@ -17,9 +17,9 @@ ranking.sort((a,b)=>b[1]-a[1])
 
 let texto="🏆 **Leaderboard Staff**\n\n"
 
-ranking.slice(0,10).forEach((user,i)=>{
+ranking.slice(0,10).forEach((u,i)=>{
 
-texto+=`${i+1}. <@${user[0]}> — ${user[1]} capítulos\n`
+texto+=`${i+1}. <@${u[0]}> — ${u[1]} capítulos\n`
 
 })
 

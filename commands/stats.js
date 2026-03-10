@@ -11,14 +11,9 @@ async execute(interaction){
 
 let stats = JSON.parse(fs.readFileSync("./data/stats.json"))
 
-const userId = interaction.user.id
+const caps = stats[interaction.user.id] || 0
 
-const caps = stats[userId] || 0
-
-interaction.reply({
-content:`📊 Has hecho **${caps} capítulos**`,
-ephemeral:true
-})
+interaction.reply(`📊 Has hecho **${caps} capítulos**`)
 
 }
 

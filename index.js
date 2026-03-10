@@ -63,6 +63,7 @@ if(interaction.isButton()){
 
 const puesto = interaction.customId
 const userId = interaction.user.id
+const mensajeId = interaction.message.id
 
 let trabajos = JSON.parse(fs.readFileSync("./data/trabajos.json"))
 let capitulos = JSON.parse(fs.readFileSync("./data/capitulos.json"))
@@ -76,16 +77,7 @@ ephemeral:true
 
 }
 
-const mensajeId = interaction.message.id
-
-if(!capitulos[mensajeId]){
-
-capitulos[mensajeId] = {
-canal:null,
-puestos:{}
-}
-
-}
+if(!capitulos[mensajeId]) return
 
 if(capitulos[mensajeId].puestos[puesto]){
 
@@ -99,15 +91,14 @@ ephemeral:true
 trabajos[userId] = mensajeId
 capitulos[mensajeId].puestos[puesto] = userId
 
-let canalId = capitulos[mensajeId].canal
-
 let canal
 
-if(!canalId){
+if(!capitulos[mensajeId].canal){
 
 canal = await interaction.guild.channels.create({
 
-name:`cap-${mensajeId}`,
+name:`cap-${capitulos[mensajeId].numero}`,
+
 type:ChannelType.GuildText,
 
 permissionOverwrites:[
@@ -135,7 +126,7 @@ capitulos[mensajeId].canal = canal.id
 
 }else{
 
-canal = interaction.guild.channels.cache.get(canalId)
+canal = interaction.guild.channels.cache.get(capitulos[mensajeId].canal)
 
 await canal.permissionOverwrites.edit(userId,{
 ViewChannel:true,
@@ -147,7 +138,7 @@ SendMessages:true
 fs.writeFileSync("./data/trabajos.json",JSON.stringify(trabajos,null,2))
 fs.writeFileSync("./data/capitulos.json",JSON.stringify(capitulos,null,2))
 
-await canal.send(`👤 ${interaction.user} tomó el puesto **${puesto}**`)
+canal.send(`👤 ${interaction.user} tomó el puesto **${puesto}**`)
 
 interaction.reply({
 content:`✅ Tomaste el puesto **${puesto}**`,
