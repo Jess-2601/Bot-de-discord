@@ -6,17 +6,31 @@ module.exports = {
 data: new SlashCommandBuilder()
 .setName("registrar")
 .setDescription("Registrarte en el sistema")
+
 .addStringOption(option =>
-option.setName("email").setRequired(true))
+option
+.setName("email")
+.setDescription("Tu correo electrónico")
+.setRequired(true))
+
 .addStringOption(option =>
-option.setName("metodo_pago").setRequired(true)),
+option
+.setName("metodo_pago")
+.setDescription("Tu método de pago")
+.setRequired(true)),
 
 async execute(interaction){
 
 const email = interaction.options.getString("email")
 const pago = interaction.options.getString("metodo_pago")
 
-let usuarios = JSON.parse(fs.readFileSync("./data/usuarios.json"))
+let usuarios = {}
+
+try{
+usuarios = JSON.parse(fs.readFileSync("./data/usuarios.json"))
+}catch{
+usuarios = {}
+}
 
 usuarios[interaction.user.id] = {
 
@@ -34,7 +48,11 @@ puntos: 0
 
 fs.writeFileSync("./data/usuarios.json", JSON.stringify(usuarios,null,2))
 
-interaction.reply("✅ Registro completado")
+await interaction.reply({
+content: "✅ Registro completado",
+ephemeral: true
+})
 
 }
+
 }
