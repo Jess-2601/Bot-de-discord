@@ -1,5 +1,16 @@
 require("dotenv").config();
 
+const express = require("express");
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("Bot activo");
+});
+
+app.listen(3000, () => {
+  console.log("🌐 Servidor web activo en puerto 3000");
+});
+
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
 const fs = require("fs");
 
@@ -7,10 +18,9 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// colección de comandos
 client.commands = new Collection();
 
-// leer carpeta commands
+// cargar comandos automáticamente
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
 
 for (const file of commandFiles) {
@@ -23,8 +33,8 @@ client.once("ready", () => {
   console.log("✅ Bot conectado correctamente");
 });
 
-// escuchar interacciones (slash commands)
-client.on("interactionCreate", async (interaction) => {
+// escuchar comandos
+client.on("interactionCreate", async interaction => {
 
   if (!interaction.isChatInputCommand()) return;
 
@@ -36,10 +46,18 @@ client.on("interactionCreate", async (interaction) => {
     await command.execute(interaction);
   } catch (error) {
     console.error(error);
-    await interaction.reply({
-      content: "❌ Hubo un error ejecutando este comando.",
-      ephemeral: true
-    });
+
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        content: "❌ Hubo un error ejecutando este comando.",
+        ephemeral: true
+      });
+    } else {
+      await interaction.reply({
+        content: "❌ Hubo un error ejecutando este comando.",
+        ephemeral: true
+      });
+    }
   }
 
 });
