@@ -15,7 +15,7 @@ let ranking = Object.entries(usuarios)
 
 ranking.sort((a,b)=> b[1].total - a[1].total)
 
-let texto = "🏆 Ranking del staff\n\n"
+let texto = "🏆 **Ranking del staff**\n\n"
 
 ranking.slice(0,10).forEach((u,i)=>{
 
@@ -26,4 +26,5 @@ texto += `${i+1}. <@${u[0]}> — ${u[1].total} capítulos\n`
 interaction.reply(texto)
 
 }
+
 }

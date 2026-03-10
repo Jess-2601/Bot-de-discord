@@ -9,7 +9,7 @@ data: new SlashCommandBuilder()
 
 async execute(interaction){
 
-let usuarios = JSON.parse(fs.readFileSync("./database/usuarios.json"))
+const usuarios = JSON.parse(fs.readFileSync("./data/usuarios.json"))
 
 let ranking = Object.entries(usuarios)
 

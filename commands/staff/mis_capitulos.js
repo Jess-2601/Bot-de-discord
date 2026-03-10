@@ -5,29 +5,42 @@ module.exports = {
 
 data: new SlashCommandBuilder()
 .setName("mis_capitulos")
-.setDescription("Ver tus capítulos"),
+.setDescription("Ver capítulos en los que estás trabajando"),
 
 async execute(interaction){
 
+const userId = interaction.user.id
+
 let capitulos = JSON.parse(fs.readFileSync("./data/capitulos.json"))
 
-let lista = capitulos.filter(c => c.usuario === interaction.user.id)
+let lista = capitulos.filter(c =>
+c.traductor === userId ||
+c.editor === userId ||
+c.limpieza === userId
+)
 
 if(lista.length === 0){
 
-return interaction.reply("No tienes capítulos asignados")
+return interaction.reply({
+content:"📭 No tienes capítulos asignados.",
+ephemeral:true
+})
 
 }
 
-let texto = "📚 Tus capítulos:\n\n"
+let texto = "📚 **Tus capítulos:**\n\n"
 
 lista.forEach(c => {
 
-texto += `${c.proyecto} - Capítulo ${c.numero}\n`
+texto += `📖 ${c.proyecto} - Cap ${c.numero}\n`
 
 })
 
-interaction.reply(texto)
+interaction.reply({
+content:texto,
+ephemeral:true
+})
 
 }
+
 }

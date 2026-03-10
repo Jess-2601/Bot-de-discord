@@ -5,35 +5,42 @@ module.exports = {
 
 data: new SlashCommandBuilder()
 .setName("perfil")
-.setDescription("Ver perfil de usuario")
-.addUserOption(option =>
-option.setName("usuario").setRequired(false)),
+.setDescription("Ver tu perfil de trabajo"),
 
 async execute(interaction){
 
-const user = interaction.options.getUser("usuario") || interaction.user
+const userId = interaction.user.id
 
 let usuarios = JSON.parse(fs.readFileSync("./data/usuarios.json"))
 
-if(!usuarios[user.id]){
-return interaction.reply("Usuario no registrado")
-}
+if(!usuarios[userId]){
 
-const data = usuarios[user.id]
-
-interaction.reply(
-
-`👤 Perfil de ${user.username}
-
-🌐 Traducciones: ${data.traductor}
-✏️ Ediciones: ${data.editor}
-🧹 Limpiezas: ${data.limpieza}
-
-📚 Total capítulos: ${data.total}
-
-⭐ Puntos: ${data.puntos}`
-
-)
+return interaction.reply({
+content:"❌ No estás registrado en el sistema.",
+ephemeral:true
+})
 
 }
+
+const datos = usuarios[userId]
+
+interaction.reply({
+
+content:
+
+`👤 **Tu perfil**
+
+🌐 Traducciones: ${datos.traductor}
+✏️ Ediciones: ${datos.editor}
+🧹 Limpiezas: ${datos.limpieza}
+
+📚 Total capítulos: ${datos.total}
+⭐ Puntos: ${datos.puntos}`,
+
+ephemeral:true
+
+})
+
+}
+
 }
