@@ -1,59 +1,70 @@
-const { SlashCommandBuilder, ChannelType } = require("discord.js");
-
-module.exports = {
-
-data: new SlashCommandBuilder()
-.setName("proyecto")
-.setDescription("Crear proyecto")
-.addStringOption(option =>
-option.setName("nombre").setDescription("Nombre del proyecto").setRequired(true))
-.addIntegerOption(option =>
-option.setName("capitulos").setDescription("Cantidad de capítulos").setRequired(true)),
-
-async execute(interaction){
-
-const nombre = interaction.options.getString("nombre");
-const caps = interaction.options.getInteger("capitulos");
-
-const guild = interaction.guild;
-
-await interaction.reply({
-content:`📖 Creando proyecto **${nombre}**`,
-ephemeral:true
-});
-
-const categoria = await guild.channels.create({
-name:nombre,
-type:ChannelType.GuildCategory
-});
-
-const canalCaps = await guild.channels.create({
-name:"capitulos",
-type:ChannelType.GuildText,
-parent:categoria.id
-});
-
-for(let i=1;i<=caps;i++){
-
-const mensaje = await canalCaps.send(
-
-`📖 ${nombre} — Capítulo ${i}
-
-📜 Traductor: Libre
-✏ Editor: Libre
-🧹 Limpieza: Libre
-
-Estado: 🟢 Disponible
-CATEGORIA:${categoria.id}`
-
-);
-
-await mensaje.react("📜");
-await mensaje.react("✏️");
-await mensaje.react("🧹");
-
-}
-
-}
-
-};
+const {
+    SlashCommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ChannelType
+  } = require("discord.js");
+  
+  module.exports = {
+    data: new SlashCommandBuilder()
+      .setName("agregar_proyecto")
+      .setDescription("Publicar un nuevo proyecto")
+  
+      .addChannelOption(option =>
+        option
+          .setName("canal")
+          .setDescription("Canal donde se publicará el proyecto")
+          .addChannelTypes(ChannelType.GuildText)
+          .setRequired(true)
+      )
+  
+      .addStringOption(option =>
+        option
+          .setName("nombre")
+          .setDescription("Nombre del proyecto")
+          .setRequired(true)
+      ),
+  
+    async execute(interaction) {
+  
+      const canal = interaction.options.getChannel("canal");
+      const nombre = interaction.options.getString("nombre");
+  
+      const botones = new ActionRowBuilder().addComponents(
+  
+        new ButtonBuilder()
+          .setCustomId("traductor")
+          .setLabel("🌐 Traductor")
+          .setStyle(ButtonStyle.Primary),
+  
+        new ButtonBuilder()
+          .setCustomId("editor")
+          .setLabel("✏️ Editor")
+          .setStyle(ButtonStyle.Success),
+  
+        new ButtonBuilder()
+          .setCustomId("limpieza")
+          .setLabel("🧹 Limpieza")
+          .setStyle(ButtonStyle.Secondary)
+      );
+  
+      await canal.send({
+        content:
+  `📚 **${nombre}**
+  
+  Reclama tu puesto para trabajar en este capítulo.
+  
+  🌐 Traductor  
+  ✏️ Editor  
+  🧹 Limpieza`,
+        components: [botones]
+      });
+  
+      await interaction.reply({
+        content: "✅ Proyecto publicado",
+        ephemeral: true
+      });
+  
+    },
+  };

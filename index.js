@@ -1,15 +1,19 @@
 require("dotenv").config();
 
-const { Client, GatewayIntentBits, Collection } = require("discord.js");
 const fs = require("fs");
 
-const database = require("./database.json");
+const {
+Client,
+GatewayIntentBits,
+Collection,
+Events,
+ChannelType
+} = require("discord.js");
 
 const client = new Client({
-intents:[
+intents: [
 GatewayIntentBits.Guilds,
 GatewayIntentBits.GuildMessages,
-GatewayIntentBits.GuildMessageReactions,
 GatewayIntentBits.MessageContent
 ]
 });
@@ -18,141 +22,110 @@ client.commands = new Collection();
 
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
 
-for(const file of commandFiles){
+for (const file of commandFiles) {
 
 const command = require(`./commands/${file}`);
-client.commands.set(command.data.name,command);
+client.commands.set(command.data.name, command);
 
 }
 
-const usuariosTrabajando = new Set(database.usuariosTrabajando);
-const datosCapitulos = database.capitulos;
-
-function guardarDB(){
-
-fs.writeFileSync("./database.json",
-JSON.stringify({
-usuariosTrabajando:[...usuariosTrabajando],
-capitulos:datosCapitulos
-},null,2));
-
-}
-
-client.once("ready",()=>{
+client.once("clientReady", () => {
 
 console.log("✅ Bot conectado");
 
 });
 
-client.on("interactionCreate", async interaction => {
+client.on(Events.InteractionCreate, async interaction => {
 
-if(!interaction.isChatInputCommand()) return;
+if (interaction.isChatInputCommand()) {
 
 const command = client.commands.get(interaction.commandName);
 
-if(!command) return;
+if (!command) return;
+
+try {
 
 await command.execute(interaction);
 
+} catch (error) {
+
+console.error(error);
+
+await interaction.reply({
+content: "❌ Error ejecutando el comando",
+ephemeral: true
 });
 
-client.on("messageReactionAdd", async (reaction,user)=>{
-
-if(user.bot) return;
-
-const mensaje = reaction.message;
-
-if(!mensaje.content.includes("Capítulo")) return;
-
-if(usuariosTrabajando.has(user.id)){
-
-reaction.users.remove(user.id);
-
-return user.send("❌ Ya estás trabajando en otro capítulo");
+}
 
 }
 
-let rol;
+if (interaction.isButton()) {
 
-if(reaction.emoji.name==="📜") rol="Traductor";
-if(reaction.emoji.name==="✏️") rol="Editor";
-if(reaction.emoji.name==="🧹") rol="Limpieza";
+const userId = interaction.user.id;
+const puesto = interaction.customId;
 
-if(!rol) return;
+let trabajos = {};
 
-let datos = datosCapitulos[mensaje.id];
-
-if(!datos){
-
-datos={
-Traductor:null,
-Editor:null,
-Limpieza:null,
-canal:null
-};
-
-datosCapitulos[mensaje.id]=datos;
-
+if (fs.existsSync("./trabajos.json")) {
+trabajos = JSON.parse(fs.readFileSync("./trabajos.json"));
 }
 
-if(datos[rol]){
+if (trabajos[userId]) {
 
-reaction.users.remove(user.id);
-
-return user.send("❌ Ese puesto ya está ocupado");
-
-}
-
-datos[rol]=user.id;
-
-usuariosTrabajando.add(user.id);
-
-guardarDB();
-
-let contenido = mensaje.content;
-
-contenido = contenido.replace(`${rol}: Libre`,`${rol}: <@${user.id}>`);
-
-if(!contenido.includes("🟡")){
-
-contenido = contenido.replace("🟢 Disponible","🟡 En progreso");
-
-}
-
-await mensaje.edit(contenido);
-
-let canal;
-
-if(!datos.canal){
-
-const linea = mensaje.content.split("\n").find(l => l.includes("CATEGORIA:"));
-const categoriaID = linea.split(":")[1];
-
-canal = await mensaje.guild.channels.create({
-name:`capitulo-${mensaje.id}`,
-parent:categoriaID
+return interaction.reply({
+content: "❌ Ya tienes un capítulo en proceso. Usa /finalizado cuando termines.",
+ephemeral: true
 });
 
-datos.canal=canal.id;
+}
 
-guardarDB();
+trabajos[userId] = true;
 
-}else{
+fs.writeFileSync("./trabajos.json", JSON.stringify(trabajos, null, 2));
 
-canal = mensaje.guild.channels.cache.get(datos.canal);
+const canalNombre = `cap-${interaction.message.id}`;
+
+let canal = interaction.guild.channels.cache.find(
+c => c.name === canalNombre
+);
+
+if (!canal) {
+
+canal = await interaction.guild.channels.create({
+name: canalNombre,
+type: ChannelType.GuildText,
+permissionOverwrites: [
+{
+id: interaction.guild.roles.everyone,
+deny: ["ViewChannel"]
+},
+{
+id: interaction.user.id,
+allow: ["ViewChannel", "SendMessages"]
+},
+{
+id: client.user.id,
+allow: ["ViewChannel", "SendMessages"]
+}
+]
+});
 
 }
 
-await canal.permissionOverwrites.create(user.id,{
-ViewChannel:true,
-SendMessages:true
+await canal.permissionOverwrites.edit(interaction.user.id, {
+ViewChannel: true,
+SendMessages: true
 });
 
-if(datos.Traductor && datos.Editor && datos.Limpieza){
+await canal.send(
+`📂 ${interaction.user} tomó el puesto **${puesto}**`
+);
 
-let nuevo = contenido.replace("🟡 En progreso","🔴 Completo");
-
-await mensaje.edit(nuevo);
+await interaction.reply({
+content: `✅ Has tomado el puesto **${puesto}**`,
+ephemeral: true
+});
 
 }
 

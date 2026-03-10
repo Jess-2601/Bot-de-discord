@@ -1,38 +1,49 @@
 const { SlashCommandBuilder } = require("discord.js");
 const fs = require("fs");
 
-const database = require("../database.json");
-
 module.exports = {
-
-data:new SlashCommandBuilder()
+data: new SlashCommandBuilder()
 .setName("finalizado")
-.setDescription("Marcar trabajo terminado"),
+.setDescription("Marcar capítulo como finalizado"),
 
 async execute(interaction){
 
-const usuarios = new Set(database.usuariosTrabajando);
+const userId = interaction.user.id;
 
-if(!usuarios.has(interaction.user.id)){
+let trabajos = {};
+let stats = {};
 
+if(fs.existsSync("./trabajos.json")){
+trabajos = JSON.parse(fs.readFileSync("./trabajos.json"));
+}
+
+if(!trabajos[userId]){
 return interaction.reply({
-content:"❌ No estás trabajando en ningún capítulo",
+content:"❌ No tienes ningún capítulo activo.",
+ephemeral:true
+});
+}
+
+delete trabajos[userId];
+
+fs.writeFileSync("./trabajos.json", JSON.stringify(trabajos,null,2));
+
+if(fs.existsSync("./stats.json")){
+stats = JSON.parse(fs.readFileSync("./stats.json"));
+}
+
+if(!stats[userId]){
+stats[userId] = 0;
+}
+
+stats[userId]++;
+
+fs.writeFileSync("./stats.json", JSON.stringify(stats,null,2));
+
+await interaction.reply({
+content:`✅ Capítulo finalizado.\n\nTotal de capítulos hechos: **${stats[userId]}**`,
 ephemeral:true
 });
 
 }
-
-usuarios.delete(interaction.user.id);
-
-database.usuariosTrabajando=[...usuarios];
-
-fs.writeFileSync("./database.json",JSON.stringify(database,null,2));
-
-interaction.reply({
-content:"✅ Ahora puedes tomar otro capítulo",
-ephemeral:true
-});
-
-}
-
 };
