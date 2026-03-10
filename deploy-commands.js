@@ -1,31 +1,63 @@
-require("dotenv").config();
+require("dotenv").config()
 
-const { REST, Routes } = require("discord.js");
-const fs = require("fs");
+const { REST, Routes } = require("discord.js")
+const fs = require("fs")
+const path = require("path")
 
-const commands = [];
-const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
+const commands = []
+
+const foldersPath = path.join(__dirname, "commands")
+const commandFolders = fs.readdirSync(foldersPath)
+
+for (const folder of commandFolders) {
+
+const commandsPath = path.join(foldersPath, folder)
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"))
 
 for (const file of commandFiles) {
-  const command = require(`./commands/${file}`);
-  commands.push(command.data.toJSON());
+
+try{
+
+const filePath = path.join(commandsPath, file)
+const command = require(filePath)
+
+if(!command.data){
+console.log(`⚠️ ${file} no tiene data`)
+continue
 }
 
-const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+commands.push(command.data.toJSON())
 
-(async () => {
-  try {
+}catch(error){
 
-    console.log("🔄 Registrando comandos en Discord...");
+console.log(`❌ ERROR EN COMANDO: ${file}`)
+console.error(error)
 
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: commands }
-    );
+}
 
-    console.log("✅ Comandos registrados correctamente");
+}
 
-  } catch (error) {
-    console.error("❌ Error registrando comandos:", error);
-  }
-})();
+}
+
+const rest = new REST({ version: "10" }).setToken(process.env.TOKEN)
+
+;(async () => {
+
+try {
+
+console.log("🔄 Registrando comandos...")
+
+await rest.put(
+Routes.applicationCommands(process.env.CLIENT_ID),
+{ body: commands }
+)
+
+console.log("✅ Comandos registrados correctamente")
+
+} catch (error) {
+
+console.error(error)
+
+}
+
+})()

@@ -1,0 +1,11 @@
+{
+    "1234567890123": {
+      "email": "usuario@email.com",
+      "metodo_pago": "Binance",
+      "traductor": 0,
+      "editor": 0,
+      "limpieza": 0,
+      "total": 0,
+      "puntos": 0
+    }
+  }

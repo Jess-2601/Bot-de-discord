@@ -1,148 +1,74 @@
 require("dotenv").config()
 
 const fs = require("fs")
+const path = require("path")
 
-const {
-Client,
-GatewayIntentBits,
-Collection,
-Events,
-ChannelType
-} = require("discord.js")
+const { Client, Collection, GatewayIntentBits } = require("discord.js")
 
 const client = new Client({
-intents:[
+intents: [
 GatewayIntentBits.Guilds,
-GatewayIntentBits.GuildMessages
+GatewayIntentBits.GuildMessages,
+GatewayIntentBits.MessageContent,
+GatewayIntentBits.GuildMessageReactions
 ]
 })
 
 client.commands = new Collection()
 
-const commandFiles = fs.readdirSync("./commands").filter(f=>f.endsWith(".js"))
+// Cargar carpetas de comandos
+const foldersPath = path.join(__dirname, "commands")
+const commandFolders = fs.readdirSync(foldersPath)
 
-for(const file of commandFiles){
+for (const folder of commandFolders) {
 
-const command = require(`./commands/${file}`)
-client.commands.set(command.data.name,command)
+const commandsPath = path.join(foldersPath, folder)
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"))
+
+for (const file of commandFiles) {
+
+const filePath = path.join(commandsPath, file)
+const command = require(filePath)
+
+if ("data" in command && "execute" in command) {
+
+client.commands.set(command.data.name, command)
+
+} else {
+
+console.log(`[WARNING] El comando ${file} no tiene data o execute.`)
 
 }
 
-client.once("clientReady",()=>{
+}
+
+}
+
+client.once("clientReady", () => {
 
 console.log("✅ Bot conectado")
 
 })
 
-client.on(Events.InteractionCreate,async interaction=>{
+client.on("interactionCreate", async interaction => {
 
-if(interaction.isChatInputCommand()){
+if (!interaction.isChatInputCommand()) return
 
 const command = client.commands.get(interaction.commandName)
 
-if(!command) return
+if (!command) return
 
-try{
+try {
 
 await command.execute(interaction)
 
-}catch(err){
+} catch (error) {
 
-console.log(err)
+console.error(error)
 
-interaction.reply({
-content:"❌ Error ejecutando comando",
-ephemeral:true
-})
-
-}
-
-}
-
-if(interaction.isButton()){
-
-const puesto = interaction.customId
-const userId = interaction.user.id
-const mensajeId = interaction.message.id
-
-let trabajos = JSON.parse(fs.readFileSync("./data/trabajos.json"))
-let capitulos = JSON.parse(fs.readFileSync("./data/capitulos.json"))
-
-if(trabajos[userId]){
-
-return interaction.reply({
-content:"❌ Ya tienes un capítulo activo.",
-ephemeral:true
-})
-
-}
-
-if(!capitulos[mensajeId]) return
-
-if(capitulos[mensajeId].puestos[puesto]){
-
-return interaction.reply({
-content:"❌ Ese puesto ya fue tomado.",
-ephemeral:true
-})
-
-}
-
-trabajos[userId] = mensajeId
-capitulos[mensajeId].puestos[puesto] = userId
-
-let canal
-
-if(!capitulos[mensajeId].canal){
-
-canal = await interaction.guild.channels.create({
-
-name:`cap-${capitulos[mensajeId].numero}`,
-
-type:ChannelType.GuildText,
-
-permissionOverwrites:[
-
-{
-id:interaction.guild.roles.everyone,
-deny:["ViewChannel"]
-},
-
-{
-id:interaction.user.id,
-allow:["ViewChannel","SendMessages"]
-},
-
-{
-id:client.user.id,
-allow:["ViewChannel","SendMessages"]
-}
-
-]
-
-})
-
-capitulos[mensajeId].canal = canal.id
-
-}else{
-
-canal = interaction.guild.channels.cache.get(capitulos[mensajeId].canal)
-
-await canal.permissionOverwrites.edit(userId,{
-ViewChannel:true,
-SendMessages:true
-})
-
-}
-
-fs.writeFileSync("./data/trabajos.json",JSON.stringify(trabajos,null,2))
-fs.writeFileSync("./data/capitulos.json",JSON.stringify(capitulos,null,2))
-
-canal.send(`👤 ${interaction.user} tomó el puesto **${puesto}**`)
-
-interaction.reply({
-content:`✅ Tomaste el puesto **${puesto}**`,
-ephemeral:true
+await interaction.reply({
+content: "❌ Hubo un error ejecutando el comando",
+ephemeral: true
 })
 
 }
