@@ -1,49 +1,42 @@
-const { SlashCommandBuilder } = require("discord.js");
-const fs = require("fs");
+const { SlashCommandBuilder } = require("discord.js")
+const fs = require("fs")
 
-module.exports = {
-data: new SlashCommandBuilder()
+module.exports={
+
+data:new SlashCommandBuilder()
 .setName("finalizado")
-.setDescription("Marcar capítulo como finalizado"),
+.setDescription("Finalizar capítulo"),
 
 async execute(interaction){
 
-const userId = interaction.user.id;
+const userId = interaction.user.id
 
-let trabajos = {};
-let stats = {};
-
-if(fs.existsSync("./trabajos.json")){
-trabajos = JSON.parse(fs.readFileSync("./trabajos.json"));
-}
+let trabajos = JSON.parse(fs.readFileSync("./data/trabajos.json"))
+let stats = JSON.parse(fs.readFileSync("./data/stats.json"))
 
 if(!trabajos[userId]){
+
 return interaction.reply({
-content:"❌ No tienes ningún capítulo activo.",
+content:"❌ No tienes capítulos activos",
 ephemeral:true
-});
+})
+
 }
 
-delete trabajos[userId];
+delete trabajos[userId]
 
-fs.writeFileSync("./trabajos.json", JSON.stringify(trabajos,null,2));
+if(!stats[userId]) stats[userId]=0
 
-if(fs.existsSync("./stats.json")){
-stats = JSON.parse(fs.readFileSync("./stats.json"));
-}
+stats[userId]++
 
-if(!stats[userId]){
-stats[userId] = 0;
-}
+fs.writeFileSync("./data/trabajos.json",JSON.stringify(trabajos,null,2))
+fs.writeFileSync("./data/stats.json",JSON.stringify(stats,null,2))
 
-stats[userId]++;
-
-fs.writeFileSync("./stats.json", JSON.stringify(stats,null,2));
-
-await interaction.reply({
-content:`✅ Capítulo finalizado.\n\nTotal de capítulos hechos: **${stats[userId]}**`,
+interaction.reply({
+content:`✅ Capítulo finalizado\nTotal: **${stats[userId]} capítulos**`,
 ephemeral:true
-});
+})
 
 }
-};
+
+}
